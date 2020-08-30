@@ -1,0 +1,17 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: cassandra
+packageMetadata:
+  shortDescription: Datomic on Cassandra on GKE
+openAPI:
+  definitions:
+    io.k8s.cli.setters.authorized-networks:
+      description: Authorized networks
+      type: array
+      x-k8s-cli:
+        setter:
+          name: authorized-networks
+          listValues:
+          - "0.0.0.0/0"
+          required: true

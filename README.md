@@ -156,3 +156,12 @@ round-trip min/avg/max = 0.926/1.037/1.143 ms
 Session ended, resume using 'kubectl attach busybox -c busybox -i -t' command when the pod is running
 pod "busybox" deleted
 ```
+
+## 2. Installing Cassandra
+
+We're going to keep things simple and straightforward by using a tweaked `kpt` based distribution
+based on the [Cassandra Kubernetes](https://github.com/kubernetes/examples/tree/master/cassandra) example.
+
+```bash
+$ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/cassandra cassandra
+```
