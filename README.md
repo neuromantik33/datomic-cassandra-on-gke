@@ -58,6 +58,7 @@ Create the cluster using `gcloud` (and modify if necessary).
 ```bash
 $ export CLUSTER_NAME=$SUBNETWORK
 $ gcloud container clusters create "$CLUSTER_NAME" \
+   --project $PROJECT_ID \
    --addons HorizontalPodAutoscaling,HttpLoadBalancing \
    --cluster-version 1.16.13-gke.1 \
    --create-subnetwork name=$SUBNETWORK \
@@ -109,4 +110,49 @@ default           Active   10m
 kube-node-lease   Active   10m
 kube-public       Active   10m
 kube-system       Active   10m
+```
+
+### 1.5 Create a router and NAT for node internet access (ingress only)
+
+In order to pull docker images from the internet, a router + nat configuration must be created
+since it is a private cluster
+
+```bash
+$ export ROUTER_NAME="$NETWORK-internet-router"
+$ gcloud compute routers create $ROUTER_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --network $NETWORK
+$ export NAT_IP_ADDR_NAME="$ROUTER_NAME-nat-external-ip"
+$ gcloud compute addresses create $NAT_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --description "External IP Address to use for $ROUTER_NAME-nat"
+$ gcloud compute routers nats create $ROUTER_NAME-nat \
+   --project $PROJECT_ID \
+   --router-region $REGION \
+   --router $ROUTER_NAME \
+   --nat-all-subnet-ip-ranges \
+   --nat-external-ip-pool $NAT_IP_ADDR_NAME
+```
+
+We can test internet connectivity (pulling public images, connecting to external services),
+by running an ephemeral busybox pod and performing some smoke checks.
+
+```bash
+$ kubectl run --rm -ti --image busybox busybox
+If you don't see a command prompt, try pressing enter.
+/ # ping 8.8.8.8
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+64 bytes from 8.8.8.8: seq=0 ttl=114 time=1.046 ms
+64 bytes from 8.8.8.8: seq=1 ttl=114 time=1.034 ms
+64 bytes from 8.8.8.8: seq=2 ttl=114 time=1.143 ms
+64 bytes from 8.8.8.8: seq=3 ttl=114 time=0.926 ms
+^C
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.926/1.037/1.143 ms
+/ # exit
+Session ended, resume using 'kubectl attach busybox -c busybox -i -t' command when the pod is running
+pod "busybox" deleted
 ```
