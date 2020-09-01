@@ -1,0 +1,154 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: cassandra
+  name: cassandra
+  namespace: cassandra
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 3 # {"$kpt-set":"replicas"}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: cassandra
+  serviceName: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: cassandra
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - env:
+        - name: MAX_HEAP_SIZE
+          value: 4G # {"$kpt-set":"jvm-xmx"}
+        - name: HEAP_NEWSIZE
+          value: 200M
+        - name: CASSANDRA_SEEDS
+          value: cassandra-0.cassandra.cassandra.svc.cluster.local
+        - name: CASSANDRA_CLUSTER_NAME
+          value: datomic-cass # {"$kpt-set":"cluster-name"}
+        - name: CASSANDRA_DC
+          value: DC1
+        - name: CASSANDRA_RACK
+          value: Rack1
+        - name: CASSANDRA_SEED_PROVIDER
+          value: io.k8s.cassandra.KubernetesSeedProvider
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: gcr.io/google-samples/cassandra:v14
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - nodetool drain
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - nodetool status
+          failureThreshold: 3
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: cassandra
+        ports:
+        - containerPort: 7000
+          name: intra-node
+          protocol: TCP
+        - containerPort: 7001
+          name: tls-intra-node
+          protocol: TCP
+        - containerPort: 7199
+          name: jmx
+          protocol: TCP
+        - containerPort: 9042
+          name: cql
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - /ready-probe.sh
+          failureThreshold: 3
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: "2" # {"$kpt-set":"pod-cpu"}
+            memory: 8Gi # {"$kpt-set":"pod-memory"}
+          requests:
+            cpu: "2" # {"$kpt-set":"pod-cpu"}
+            memory: 8Gi # {"$kpt-set":"pod-memory"}
+        securityContext:
+          capabilities:
+            add:
+            - IPC_LOCK
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /cassandra_data
+          name: data
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - /sbin/sysctl
+        - -w
+        - vm.max_map_count=1048575
+        image: alpine:3.6
+        imagePullPolicy: IfNotPresent
+        name: cassandra-init
+        resources: {}
+        securityContext:
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 1800
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 64Gi # {"$kpt-set":"storage-size"}
+      storageClassName: ssd # {"$kpt-set":"storage-class"}
+      volumeMode: Filesystem
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: cassandra
+  namespace: cassandra
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: cassandra

@@ -15,3 +15,52 @@ openAPI:
           listValues:
           - "0.0.0.0/0"
           required: true
+    io.k8s.cli.setters.replicas:
+      description: Cassandra replicas
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          isSet: true
+    io.k8s.cli.setters.jvm-xmx:
+      description: JVM max heap
+      x-k8s-cli:
+        setter:
+          name: jvm-max-heap
+          value: "4G"
+          isSet: true
+    io.k8s.cli.setters.cluster-name:
+      description: Cassandra cluster name
+      x-k8s-cli:
+        setter:
+          name: cluster-name
+          value: datomic-cass
+          isSet: true
+    io.k8s.cli.setters.pod-cpu:
+      description: Cassandra CPU count
+      x-k8s-cli:
+        setter:
+          name: pod-cpu
+          value: "2"
+          isSet: true
+    io.k8s.cli.setters.pod-memory:
+      description: Cassandra CPU memory
+      x-k8s-cli:
+        setter:
+          name: pod-memory
+          value: 8Gi
+          isSet: true
+    io.k8s.cli.setters.storage-size:
+      description: Cassandra storage capacity
+      x-k8s-cli:
+        setter:
+          name: storage-size
+          value: 64Gi
+          isSet: true
+    io.k8s.cli.setters.storage-class:
+      description: Cassandra storage class
+      x-k8s-cli:
+        setter:
+          name: storage-class
+          value: ssd
+          isSet: true
