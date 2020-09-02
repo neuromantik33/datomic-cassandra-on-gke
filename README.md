@@ -162,6 +162,106 @@ pod "busybox" deleted
 We're going to keep things simple and straightforward by using a tweaked `kpt` based distribution
 based on the [Cassandra Kubernetes](https://github.com/kubernetes/examples/tree/master/cassandra) example.
 
+### 2.1 Reserve a public IP address for the cassandra client
+
+```bash
+$ export CASSANDRA_CLIENT_IP_ADDR_NAME=datomic-cass
+$ gcloud compute addresses create $CASSANDRA_CLIENT_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --description "External IP Address to use for cassandra"
+$ export CASSANDRA_CLIENT_IP_ADDR=$(gcloud compute addresses describe $CASSANDRA_CLIENT_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --format json | jq -r .address)
+```
+
+### 2.2 First create the `cassandra` namespace
+
+```bash
+$ kubectl create ns cassandra
+namespace/cassandra created
+```
+
+### 2.3 Fetch and configure the cassandra distribution
+
+Then fetch the cassandra distribution, don't forget to set the authorized networks 
+and cassandra client IP determined before.
+
 ```bash
 $ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/cassandra cassandra
+$ kpt cfg set cassandra authorized-networks $AUTHORIZED_NETWORKS
+$ kpt cfg set cassandra cassandra-ip $CASSANDRA_CLIENT_IP_ADDR
+```
+
+Any other properties can be set before application. A list can be determined by executing
+`kpt cfg list-setters cassandra`.
+
+### 2.4 Install cassandra
+
+```bash
+$ kpt live init cassandra
+$ kpt live apply --reconcile-timeout 10m --poll-period 5s cassandra
+storageclass.storage.k8s.io/ssd created
+service/cassandra created
+service/cassandra-client created
+statefulset.apps/cassandra created
+poddisruptionbudget.policy/cassandra created
+5 resource(s) applied. 5 created, 0 unchanged, 0 configured
+service/cassandra is NotFound: Resource not found
+service/cassandra-client is NotFound: Resource not found
+statefulset.apps/cassandra is NotFound: Resource not found
+poddisruptionbudget.policy/cassandra is NotFound: Resource not found
+storageclass.storage.k8s.io/ssd is NotFound: Resource not found
+storageclass.storage.k8s.io/ssd is Current: Resource is current
+service/cassandra is Current: Service is ready
+service/cassandra-client is Current: Service is ready
+statefulset.apps/cassandra is InProgress: Replicas: 1/3
+poddisruptionbudget.policy/cassandra is Current: AllowedDisruptions has been computed.
+statefulset.apps/cassandra is InProgress: Replicas: 1/3
+statefulset.apps/cassandra is InProgress: Replicas: 1/3
+statefulset.apps/cassandra is InProgress: Replicas: 2/3
+statefulset.apps/cassandra is InProgress: Replicas: 2/3
+statefulset.apps/cassandra is InProgress: Replicas: 2/3
+statefulset.apps/cassandra is InProgress: Ready: 2/3
+statefulset.apps/cassandra is InProgress: Ready: 2/3
+statefulset.apps/cassandra is InProgress: Ready: 2/3
+statefulset.apps/cassandra is Current: All replicas scheduled as expected. Replicas: 3
+all resources has reached the Current status
+0 resource(s) pruned, 0 skipped
+```
+
+Let's perform some simple verifications to make sure everything is OK.
+
+```bash
+$ kubectl get all
+NAME              READY   STATUS    RESTARTS   AGE
+pod/cassandra-0   1/1     Running   0          4m45s
+pod/cassandra-1   1/1     Running   0          3m54s
+pod/cassandra-2   1/1     Running   0          2m38s
+
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                      AGE
+service/cassandra          ClusterIP      None            <none>          7000/TCP,7001/TCP,7199/TCP   4m45s
+service/cassandra-client   LoadBalancer   10.x.x.x        <cassandra_ip>  9042:30892/TCP               4m45s
+
+NAME                         READY   AGE
+statefulset.apps/cassandra   3/3     4m45s
+```
+
+Using `nodetool`, make sure all nodes are `UP` (ie. UP/Normal)
+
+```bash
+$ kubectl exec -ti cassandra-0 -- bash
+root@cassandra-0:/# nodetool status
+Datacenter: DC1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address    Load       Tokens       Owns (effective)  Host ID                               Rack
+UN  10.44.3.8  104.55 KiB  32           64.2%             236e3ccc-ab0f-4c9c-a713-3d5ea88a7acb  Rack1
+UN  10.44.1.4  103.81 KiB  32           61.1%             82fb0c2b-ac78-4152-aa8e-0f4eaeba42a7  Rack1
+UN  10.44.0.6  65.87 KiB  32           74.7%             57520dfe-6d65-4a64-b774-fbb8e2c21fa5  Rack1
+
+root@cassandra-0:/# exit
+exit
 ```

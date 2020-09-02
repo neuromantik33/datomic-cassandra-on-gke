@@ -35,6 +35,7 @@ metadata:
   namespace: cassandra
 spec:
   externalTrafficPolicy: Cluster
+  loadBalancerIP: "" # {"$kpt-set":"cassandra-ip"}
   loadBalancerSourceRanges: # {"$kpt-set":"authorized-networks"}
   - "0.0.0.0/0"
   ports:

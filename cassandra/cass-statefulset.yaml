@@ -41,8 +41,6 @@ spec:
           value: DC1
         - name: CASSANDRA_RACK
           value: Rack1
-        - name: CASSANDRA_SEED_PROVIDER
-          value: io.k8s.cassandra.KubernetesSeedProvider
         - name: POD_IP
           valueFrom:
             fieldRef:
