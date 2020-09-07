@@ -12,7 +12,7 @@ openAPI:
       x-k8s-cli:
         setter:
           listValues:
-          - "0.0.0.0/0"
+          - 0.0.0.0/0
           name: authorized-networks
           required: true
     io.k8s.cli.setters.encrypt-channel:
@@ -26,19 +26,37 @@ openAPI:
       x-k8s-cli:
         setter:
           name: java-opts
-          value: -Xms3g -Xmx3g -XX:MaxGCPauseMillis=50
-    io.k8s.cli.setters.memory-index-threshold:
-      description: See https://docs.datomic.com/on-prem/caching.html
+          value: -XX:MaxGCPauseMillis=50
+    io.k8s.cli.setters.license-key:
+      description: Datomic transactor license
       x-k8s-cli:
         setter:
-          name: memory-index-threshold
-          value: 32m
+          name: license-key
+          required: true
+    io.k8s.cli.setters.max-heap:
+      description: Datomic transactor XMX
+      x-k8s-cli:
+        setter:
+          name: max-heap
+          value: -Xmx3g
     io.k8s.cli.setters.memory-index-max:
       description: See https://docs.datomic.com/on-prem/caching.html
       x-k8s-cli:
         setter:
           name: memory-index-max
           value: 512m
+    io.k8s.cli.setters.memory-index-threshold:
+      description: See https://docs.datomic.com/on-prem/caching.html
+      x-k8s-cli:
+        setter:
+          name: memory-index-threshold
+          value: 32m
+    io.k8s.cli.setters.min-heap:
+      description: Datomic transactor XMS
+      x-k8s-cli:
+        setter:
+          name: min-heap
+          value: -Xms3g
     io.k8s.cli.setters.object-cache-max:
       description: See https://docs.datomic.com/on-prem/caching.html
       x-k8s-cli:

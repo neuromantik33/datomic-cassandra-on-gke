@@ -347,7 +347,20 @@ $ kubectl config use-context $GKE_CLUSTER_NAME
 ### 3.6 Set the required properties
 
 ```bash
-$ kpt cfg set datomic/transactor/ authorized-networks $AUTHORIZED_NETWORKS
-$ kpt cfg set datomic/transactor/ transactor-ip $TRANSACTOR_IP_ADDR
-$ kpt cfg set datomic/transactor/ transactor-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
+$ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/datomic/transactor transactor
+$ kpt cfg set transactor/ authorized-networks $AUTHORIZED_NETWORKS
+$ kpt cfg set transactor/ transactor-ip $TRANSACTOR_IP_ADDR
+$ kpt cfg set transactor/ license-key <your_transactor_license>
+$ kpt cfg set transactor/ transactor-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
+```
+
+Any other properties can be set before application. A list can be determined by executing
+`kpt cfg list-setters transactor`.
+
+### 3.7 Install the transactor
+
+```bash
+$ kpt live init transactor
+$ kpt live apply --reconcile-timeout 3m transactor
+...
 ```
