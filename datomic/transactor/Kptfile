@@ -1,0 +1,23 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: transactor
+packageMetadata:
+  shortDescription: Datomic on Cassandra on GKE
+openAPI:
+  definitions:
+    io.k8s.cli.setters.transactor-ip:
+      description: Datomic transactor client ip
+      x-k8s-cli:
+        setter:
+          name: transactor-ip
+          required: true
+    io.k8s.cli.setters.authorized-networks:
+      description: Authorized networks
+      type: array
+      x-k8s-cli:
+        setter:
+          listValues:
+          - "0.0.0.0/0"
+          name: authorized-networks
+          required: true
