@@ -6,12 +6,6 @@ packageMetadata:
   shortDescription: Datomic on Cassandra on GKE
 openAPI:
   definitions:
-    io.k8s.cli.setters.transactor-ip:
-      description: Datomic transactor client ip
-      x-k8s-cli:
-        setter:
-          name: transactor-ip
-          required: true
     io.k8s.cli.setters.authorized-networks:
       description: Authorized networks
       type: array
@@ -20,4 +14,58 @@ openAPI:
           listValues:
           - "0.0.0.0/0"
           name: authorized-networks
+          required: true
+    io.k8s.cli.setters.encrypt-channel:
+      description: Set to false to disable SSL between the peers and the transactor.
+      x-k8s-cli:
+        setter:
+          name: encrypt-channel
+          value: "false"
+    io.k8s.cli.setters.java-opts:
+      description: Datomic transactor JAVA_OPTS
+      x-k8s-cli:
+        setter:
+          name: java-opts
+          value: -Xms3g -Xmx3g -XX:MaxGCPauseMillis=50
+    io.k8s.cli.setters.memory-index-threshold:
+      description: See https://docs.datomic.com/on-prem/caching.html
+      x-k8s-cli:
+        setter:
+          name: memory-index-threshold
+          value: 32m
+    io.k8s.cli.setters.memory-index-max:
+      description: See https://docs.datomic.com/on-prem/caching.html
+      x-k8s-cli:
+        setter:
+          name: memory-index-max
+          value: 512m
+    io.k8s.cli.setters.object-cache-max:
+      description: See https://docs.datomic.com/on-prem/caching.html
+      x-k8s-cli:
+        setter:
+          name: object-cache-max
+          value: 1g
+    io.k8s.cli.setters.pod-cpu:
+      description: Transactor CPU count
+      x-k8s-cli:
+        setter:
+          name: pod-cpu
+          value: "1"
+    io.k8s.cli.setters.pod-memory:
+      description: Transactor CPU memory
+      x-k8s-cli:
+        setter:
+          name: pod-memory
+          value: 4Gi
+    io.k8s.cli.setters.transactor-image:
+      description: Datomic transactor image
+      x-k8s-cli:
+        setter:
+          name: transactor-image
+          required: true
+    io.k8s.cli.setters.transactor-ip:
+      description: Datomic transactor client ip
+      x-k8s-cli:
+        setter:
+          name: transactor-ip
           required: true

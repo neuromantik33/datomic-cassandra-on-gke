@@ -320,3 +320,34 @@ xxxxxxxxxxx: Layer already exists
 xxxxxxxxxxx: Layer already exists 
 1.0.6202: digest: sha256:xxxxxx size: 2220
 ```
+
+### 3.4 Reserve a public IP address for the datomic transactor
+
+```bash
+$ export TRANSACTOR_IP_ADDR_NAME=datomic-transactor
+$ gcloud compute addresses create $TRANSACTOR_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --description "External IP Address to use for the datomic transactor"
+$ export TRANSACTOR_IP_ADDR=$(gcloud compute addresses describe $TRANSACTOR_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --format json | jq -r .address)
+```
+
+### 3.5 Create the `datomic` namespace
+
+```bash
+$ kubectl create ns datomic
+namespace/datomic created
+$ kubectl config set-context $GKE_CLUSTER_NAME --namespace datomic
+$ kubectl config use-context $GKE_CLUSTER_NAME
+```
+
+### 3.6 Set the required properties
+
+```bash
+$ kpt cfg set datomic/transactor/ authorized-networks $AUTHORIZED_NETWORKS
+$ kpt cfg set datomic/transactor/ transactor-ip $TRANSACTOR_IP_ADDR
+$ kpt cfg set datomic/transactor/ transactor-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
+```

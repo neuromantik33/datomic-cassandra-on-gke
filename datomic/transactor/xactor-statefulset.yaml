@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: datomic
+    role: transactor
+  name: transactor
+  namespace: datomic
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: datomic
+      role: transactor
+  serviceName: transactor
+  template:
+    metadata:
+      labels:
+        app: datomic
+        role: transactor
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: datomic
+                  role: transactor
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - command:
+        - ./bin/transactor.sh
+        env:
+        - name: JAVA_OPTS
+          value: -Xms3g -Xmx3g -XX:MaxGCPauseMillis=50 # {"$kpt-set":"java-opts"}
+        - name: PROTOCOL
+          value: cass
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: HOST
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: ALT_HOST
+          value: "" # {"$kpt-set":"transactor-ip"}
+        - name: MEMORY_INDEX_THRESHOLD
+          value: 32m # {"$kpt-set":"memory-index-threshold"}
+        - name: MEMORY_INDEX_MAX # {"$kpt-set":"memory-index-max"}
+          value: 512m
+        - name: OBJECT_CACHE_MAX # {"$kpt-set":"object-cache-max"}
+          value: 1g
+        - name: CASSANDRA_TABLE
+          value: datomic.datomic
+        - name: CASSANDRA_HOST
+          value: cassandra-0.cassandra.cassandra.svc.cluster.local
+        - name: CASSANDRA_PORT
+          value: "9042"
+        - name: ENCRYPT_CHANNEL
+          value: "false" # {"$kpt-set":"encrypt-channel"}
+        - name: HEALTH_PORT
+          value: "9999"
+        image: "" # {"$kpt-set":"transactor-image"}
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 9999
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: transactor
+        ports:
+        - containerPort: 4334
+          name: datomic
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 9999
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: "1" # {"$kpt-set":"pod-cpu"}
+            memory: 4Gi # {"$kpt-set":"pod-memory"}
+          requests:
+            cpu: "1" # {"$kpt-set":"pod-cpu"}
+            memory: 4Gi # {"$kpt-set":"pod-memory"}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - cqlsh
+        - -f
+        - /root/init-cassandra.cql
+        - cassandra-0.cassandra.cassandra.svc.cluster.local
+        - "9042"
+        image: cassandra:3.11.7
+        imagePullPolicy: IfNotPresent
+        name: init-cassandra
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /root
+          name: init
+          subPath: init-cassandra.cql
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: data
+      - configMap:
+          defaultMode: 420
+          name: init
+        name: init-cassandra
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+---
+apiVersion: v1
+data:
+  init-cassandra.cql: |
+    CREATE KEYSPACE IF NOT EXISTS datomic WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
+    CREATE TABLE IF NOT EXISTS datomic.datomic
+    (
+        id  text PRIMARY KEY,
+        rev bigint,
+        map text,
+        val blob
+    ) WITH gc_grace_seconds = 259200;
+kind: ConfigMap
+metadata:
+  name: init-cassandra
+  namespace: datomic
