@@ -362,5 +362,17 @@ Any other properties can be set before application. A list can be determined by 
 ```bash
 $ kpt live init transactor
 $ kpt live apply --reconcile-timeout 3m transactor
-...
+configmap/init-cassandra created
+service/transactor created
+statefulset.apps/transactor created
+3 resource(s) applied. 3 created, 0 unchanged, 0 configured
+configmap/init-cassandra is NotFound: Resource not found
+service/transactor is NotFound: Resource not found
+statefulset.apps/transactor is NotFound: Resource not found
+service/transactor is Current: Service is ready
+statefulset.apps/transactor is InProgress: Ready: 0/1
+statefulset.apps/transactor is InProgress: Ready: 0/1
+statefulset.apps/transactor is Current: Partition rollout complete. updated: 1
+all resources has reached the Current status
+0 resource(s) pruned, 0 skipped
 ```
