@@ -183,6 +183,15 @@ $ kubectl create ns cassandra
 namespace/cassandra created
 ```
 
+Configure `kubectl` to point to the correct cluster and namespace (`cassandra` for now)
+
+```bash
+$ export GKE_CLUSTER_NAME=gke_"$PROJECT_ID"_"$ZONE"_"$CLUSTER_NAME"
+$ kubectl config set-context $GKE_CLUSTER_NAME --namespace cassandra
+Context <gke_cluster_name> modified.
+$ kubectl config use-context $GKE_CLUSTER_NAME
+```
+
 ### 2.3 Fetch and configure the cassandra distribution
 
 Then fetch the cassandra distribution, don't forget to set the authorized networks 
@@ -234,7 +243,7 @@ all resources has reached the Current status
 Let's perform some simple verifications to make sure everything is OK.
 
 ```bash
-$ kubectl get all
+$ kubectl -n cassandra get all
 NAME              READY   STATUS    RESTARTS   AGE
 pod/cassandra-0   1/1     Running   0          4m45s
 pod/cassandra-1   1/1     Running   0          3m54s
@@ -251,7 +260,7 @@ statefulset.apps/cassandra   3/3     4m45s
 Using `nodetool`, make sure all nodes are `UP` (ie. UP/Normal)
 
 ```bash
-$ kubectl exec -ti cassandra-0 -- bash
+$ kubectl -n cassandra exec -ti cassandra-0 -- bash
 root@cassandra-0:/# nodetool status
 Datacenter: DC1
 ===============
@@ -264,4 +273,50 @@ UN  10.44.0.6  65.87 KiB  32           74.7%             57520dfe-6d65-4a64-b774
 
 root@cassandra-0:/# exit
 exit
+```
+
+## 3. Installing the Datomic transactor
+
+In order to continue you need to register [here](https://my.datomic.com/account) for a Datomic account in order to get the credentials
+required for downloading the datomic-pro binaries.
+
+### 3.1 Downloading the binaries
+
+```bash
+$ export DATOMIC_VERSION=1.0.6202
+$ export DATOMIC_USER=<your_registered_email>
+$ export DATOMIC_PASSWORD=<your_password>
+$ curl -L -u "$DATOMIC_USER:$DATOMIC_PASSWORD" \
+   https://my.datomic.com/repo/com/datomic/datomic-pro/"$DATOMIC_VERSION"/datomic-pro-"$DATOMIC_VERSION".zip \
+   -o datomic/datomic-pro-"$DATOMIC_VERSION".zip
+```
+
+### 3.2 Building the base image
+
+You need to be working from this repo (and have a working version of `docker`) in order to build the image:
+
+```bash
+$ docker build \
+   -t eu.gcr.io/$PROJECT_ID/datomic-pro:$DATOMIC_VERSION \
+   --build-arg version=$DATOMIC_VERSION datomic/
+$ docker images
+REPOSITORY                         TAG      IMAGE ID     CREATED              SIZE
+eu.gcr.io/<project_id>/datomic-pro 1.0.6202 a17fd47fc140 About a minute ago   1.34GB
+```
+
+### 3.3 Publish it to your local GKE registry
+
+```bash
+$ docker push eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202 
+The push refers to repository [eu.gcr.io/<your_project>/datomic-pro]
+xxxxxxxxxxx: Pushed 
+xxxxxxxxxxx: Pushed 
+xxxxxxxxxxx: Pushed 
+xxxxxxxxxxx: Layer already exists 
+xxxxxxxxxxx: Layer already exists 
+xxxxxxxxxxx: Layer already exists 
+xxxxxxxxxxx: Layer already exists 
+xxxxxxxxxxx: Layer already exists 
+xxxxxxxxxxx: Layer already exists 
+1.0.6202: digest: sha256:xxxxxx size: 2220
 ```
