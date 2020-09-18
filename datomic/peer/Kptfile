@@ -1,0 +1,74 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: peer
+packageMetadata:
+  shortDescription: Datomic on Cassandra on GKE
+openAPI:
+  definitions:
+    io.k8s.cli.setters.access-key:
+      description: Datomic peer access-key
+      x-k8s-cli:
+        setter:
+          name: access-key
+          required: true
+    io.k8s.cli.setters.authorized-networks:
+      description: Authorized networks
+      type: array
+      x-k8s-cli:
+        setter:
+          listValues:
+          - 0.0.0.0/0
+          name: authorized-networks
+          required: true
+    io.k8s.cli.setters.db-name:
+      description: Datomic peer db-name
+      x-k8s-cli:
+        setter:
+          name: db-name
+          required: true
+    io.k8s.cli.substitutions.db-uri:
+      x-k8s-cli:
+        substitution:
+          name: db-uri
+          pattern: datomic:cass://cassandra-0.cassandra.cassandra.svc.cluster.local:9042/datomic.datomic/${db-name}
+          required: true
+          values:
+          - marker: ${db-name}
+            ref: '#/definitions/io.k8s.cli.setters.db-name'
+    io.k8s.cli.setters.gc-opts:
+      description: Datomic peer GC_OPTS
+      x-k8s-cli:
+        setter:
+          name: gc-opts
+          value: -XX:+UseG1GC -Xms3g -Xmx3g
+    io.k8s.cli.setters.pod-cpu:
+      description: Peer CPU count
+      x-k8s-cli:
+        setter:
+          name: pod-cpu
+          value: "2"
+    io.k8s.cli.setters.pod-memory:
+      description: Peer CPU memory
+      x-k8s-cli:
+        setter:
+          name: pod-memory
+          value: 4Gi
+    io.k8s.cli.setters.peer-image:
+      description: Datomic peer image
+      x-k8s-cli:
+        setter:
+          name: peer-image
+          required: true
+    io.k8s.cli.setters.peer-ip:
+      description: Datomic peer client ip
+      x-k8s-cli:
+        setter:
+          name: peer-ip
+          required: true
+    io.k8s.cli.setters.secret:
+      description: Datomic peer secret
+      x-k8s-cli:
+        setter:
+          name: secret
+          required: true

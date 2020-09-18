@@ -21,5 +21,9 @@ RUN set -o errexit -o nounset \
         unzip \
     && apt-get autoremove --yes --purge
 
-ADD transactor.sh xactor_properties.sh logback.xml $DATOMIC_HOME/bin/
+ADD peer.sh \
+    transactor.sh \
+    xactor_properties.sh \
+    logback.xml \
+    $DATOMIC_HOME/bin/
 WORKDIR $DATOMIC_HOME

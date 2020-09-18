@@ -307,7 +307,7 @@ eu.gcr.io/<project_id>/datomic-pro 1.0.6202 a17fd47fc140 About a minute ago   1.
 ### 3.3 Publish it to your local GKE registry
 
 ```bash
-$ docker push eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202 
+$ docker push eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
 The push refers to repository [eu.gcr.io/<your_project>/datomic-pro]
 xxxxxxxxxxx: Pushed 
 xxxxxxxxxxx: Pushed 
@@ -362,6 +362,66 @@ Any other properties can be set before application. A list can be determined by 
 ```bash
 $ kpt live init transactor
 $ kpt live apply --reconcile-timeout 3m transactor
+configmap/init-cassandra created
+service/transactor created
+statefulset.apps/transactor created
+3 resource(s) applied. 3 created, 0 unchanged, 0 configured
+configmap/init-cassandra is NotFound: Resource not found
+service/transactor is NotFound: Resource not found
+statefulset.apps/transactor is NotFound: Resource not found
+service/transactor is Current: Service is ready
+statefulset.apps/transactor is InProgress: Ready: 0/1
+statefulset.apps/transactor is InProgress: Ready: 0/1
+statefulset.apps/transactor is Current: Partition rollout complete. updated: 1
+all resources has reached the Current status
+0 resource(s) pruned, 0 skipped
+```
+
+## 4. Installing the Datomic peer (optional)
+
+There are some times where it is probably best to install a
+[peer server](https://docs.datomic.com/on-prem/peer-server.html) in order to perform
+database operations without a full-blown peer (ex. serverless, short running jobs).
+
+However, it is necessary to create the database yourself beforehand in order for the peer
+to run (probably using a REPL or your application). For our purposes we have created a
+database called `test`.
+
+### 4.1 Reserve a public IP address for the datomic peer
+
+```bash
+$ export PEER_IP_ADDR_NAME=datomic-peer
+$ gcloud compute addresses create $PEER_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --description "External IP Address to use for the datomic peer"
+$ export PEER_IP_ADDR=$(gcloud compute addresses describe $PEER_IP_ADDR_NAME \
+   --project $PROJECT_ID \
+   --region $REGION \
+   --format json | jq -r .address)
+```
+
+### 4.2 Set the required properties
+
+```bash
+$ export DB_NAME=test
+$ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/datomic/peer peer
+$ kpt cfg set peer/ db-name $DB_NAME
+$ kpt cfg set peer/ access-key $DB_NAME
+$ kpt cfg set peer/ secret $DB_NAME
+$ kpt cfg set peer/ authorized-networks $AUTHORIZED_NETWORKS
+$ kpt cfg set peer/ peer-ip $PEER_IP_ADDR
+$ kpt cfg set peer/ peer-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
+```
+
+Any other properties can be set before application. A list can be determined by executing
+`kpt cfg list-setters peer`.
+
+### 3.7 Install the peer
+
+```bash
+$ kpt live init peer
+$ kpt live apply --reconcile-timeout 3m peer
 configmap/init-cassandra created
 service/transactor created
 statefulset.apps/transactor created
