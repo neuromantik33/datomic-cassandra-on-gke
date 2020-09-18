@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: datomic
+    role: peer
+  name: peer
+  namespace: datomic
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: datomic
+      role: peer
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: datomic
+        role: peer
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: datomic
+                  role: peer
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - command:
+        - bin/peer.sh
+        env:
+        - name: GC_OPTS
+          value: -XX:+UseG1GC -Xms3g -Xmx3g # {"$kpt-set":"gc-opts"}
+        - name: PEER_DB_NAME
+          value: "" # {"$kpt-set":"db-name"}
+        - name: PEER_DB_URI
+          value: "" # {"$kpt-set":"db-uri"}
+        - name: PEER_ACCESS_KEY
+          value: "" # {"$kpt-set":"access-key"}
+        - name: PEER_SECRET
+          value: "" # {"$kpt-set":"secret"}
+        image: "" # {"$kpt-set":"peer-image"}
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8998
+            scheme: HTTPS
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: peer
+        ports:
+        - containerPort: 8998
+          name: datomic
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8998
+            scheme: HTTPS
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: "2" # {"$kpt-set":"pod-cpu"}
+            memory: 4Gi # {"$kpt-set":"pod-memory"}
+          requests:
+            cpu: "1" # {"$kpt-set":"pod-cpu"}
+            memory: 4Gi # {"$kpt-set":"pod-memory"}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 300

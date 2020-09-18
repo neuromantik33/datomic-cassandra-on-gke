@@ -94,15 +94,6 @@ APP_ARGS="-m datomic.peer-server"
 # If the max heap size is not specifically set, calculate it based on the container's cgroup limits
 ALL_JVM_OPTS="$DEFAULT_JVM_OPTS $JAVA_OPTS $GC_OPTS"
 
-# Optional env variables
-if [ -n "$PEER_HOST" ]; then
-  APP_ARGS="$APP_ARGS --host $PEER_HOST"
-fi
-
-if [ -n "$PEER_PORT" ]; then
-  APP_ARGS="$APP_ARGS --port $PEER_PORT"
-fi
-
 # Mandatory env variables
 [ -z "$PEER_ACCESS_KEY" ] && die "PEER_ACCESS_KEY environment variable must be set"
 [ -z "$PEER_SECRET" ] && die "PEER_SECRET environment variable must be set"

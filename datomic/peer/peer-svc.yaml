@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: datomic
+    role: peer
+  name: peer
+  namespace: datomic
+spec:
+  externalTrafficPolicy: Cluster
+  loadBalancerIP: "" # {"$kpt-set":"peer-ip"}
+  loadBalancerSourceRanges: # {"$kpt-set":"authorized-networks"}
+  - "0.0.0.0/0"
+  ports:
+  - name: datomic
+    port: 8998
+    protocol: TCP
+    targetPort: datomic
+  selector:
+    app: datomic
+    role: peer
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  type: LoadBalancer
