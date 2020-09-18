@@ -27,3 +27,4 @@ ADD peer.sh \
     logback.xml \
     $DATOMIC_HOME/bin/
 WORKDIR $DATOMIC_HOME
+EXPOSE 4334 4335 4336 8998

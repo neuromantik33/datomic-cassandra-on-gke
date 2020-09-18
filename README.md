@@ -422,17 +422,15 @@ Any other properties can be set before application. A list can be determined by 
 ```bash
 $ kpt live init peer
 $ kpt live apply --reconcile-timeout 3m peer
-configmap/init-cassandra created
-service/transactor created
-statefulset.apps/transactor created
-3 resource(s) applied. 3 created, 0 unchanged, 0 configured
-configmap/init-cassandra is NotFound: Resource not found
-service/transactor is NotFound: Resource not found
-statefulset.apps/transactor is NotFound: Resource not found
-service/transactor is Current: Service is ready
-statefulset.apps/transactor is InProgress: Ready: 0/1
-statefulset.apps/transactor is InProgress: Ready: 0/1
-statefulset.apps/transactor is Current: Partition rollout complete. updated: 1
+service/peer created
+deployment.apps/peer created
+2 resource(s) applied. 2 created, 0 unchanged, 0 configured
+service/peer is NotFound: Resource not found
+deployment.apps/peer is NotFound: Resource not found
+service/peer is Current: Service is ready
+deployment.apps/peer is InProgress: Available: 0/1
+deployment.apps/peer is InProgress: Available: 0/1
+deployment.apps/peer is Current: Deployment is available. Replicas: 1
 all resources has reached the Current status
 0 resource(s) pruned, 0 skipped
 ```

@@ -27,33 +27,12 @@ openAPI:
         setter:
           name: db-name
           required: true
-    io.k8s.cli.substitutions.db-uri:
-      x-k8s-cli:
-        substitution:
-          name: db-uri
-          pattern: datomic:cass://cassandra-0.cassandra.cassandra.svc.cluster.local:9042/datomic.datomic/${db-name}
-          required: true
-          values:
-          - marker: ${db-name}
-            ref: '#/definitions/io.k8s.cli.setters.db-name'
     io.k8s.cli.setters.gc-opts:
       description: Datomic peer GC_OPTS
       x-k8s-cli:
         setter:
           name: gc-opts
           value: -XX:+UseG1GC -Xms3g -Xmx3g
-    io.k8s.cli.setters.pod-cpu:
-      description: Peer CPU count
-      x-k8s-cli:
-        setter:
-          name: pod-cpu
-          value: "2"
-    io.k8s.cli.setters.pod-memory:
-      description: Peer CPU memory
-      x-k8s-cli:
-        setter:
-          name: pod-memory
-          value: 4Gi
     io.k8s.cli.setters.peer-image:
       description: Datomic peer image
       x-k8s-cli:
@@ -66,9 +45,30 @@ openAPI:
         setter:
           name: peer-ip
           required: true
+    io.k8s.cli.setters.pod-cpu:
+      description: Peer CPU count
+      x-k8s-cli:
+        setter:
+          name: pod-cpu
+          value: "2"
+    io.k8s.cli.setters.pod-memory:
+      description: Peer CPU memory
+      x-k8s-cli:
+        setter:
+          name: pod-memory
+          value: 4Gi
     io.k8s.cli.setters.secret:
       description: Datomic peer secret
       x-k8s-cli:
         setter:
           name: secret
           required: true
+    io.k8s.cli.substitutions.db-uri:
+      x-k8s-cli:
+        substitution:
+          name: db-uri
+          pattern: datomic:cass://cassandra-0.cassandra.cassandra.svc.cluster.local:9042/datomic.datomic/${db-name}
+          required: true
+          values:
+          - marker: ${db-name}
+            ref: '#/definitions/io.k8s.cli.setters.db-name'

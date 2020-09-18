@@ -99,7 +99,7 @@ ALL_JVM_OPTS="$DEFAULT_JVM_OPTS $JAVA_OPTS $GC_OPTS"
 [ -z "$PEER_SECRET" ] && die "PEER_SECRET environment variable must be set"
 [ -z "$PEER_DB_NAME" ] && die "PEER_DB_NAME environment variable must be set"
 [ -z "$PEER_DB_URI" ] && die "PEER_DB_URI environment variable must be set"
-APP_ARGS="$APP_ARGS --auth $PEER_ACCESS_KEY,$PEER_SECRET --db $PEER_DB_NAME,$PEER_DB_URI"
+APP_ARGS="$APP_ARGS --host 0.0.0.0 --port 8998 --auth $PEER_ACCESS_KEY,$PEER_SECRET --db $PEER_DB_NAME,$PEER_DB_URI"
 
 # Collect all arguments for the java command, following the shell quoting and substitution rules
 eval set -- "$ALL_JVM_OPTS -classpath \"$CLASSPATH\" clojure.main -i bin/bridge.clj $APP_ARGS"
