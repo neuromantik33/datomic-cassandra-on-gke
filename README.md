@@ -162,21 +162,7 @@ pod "busybox" deleted
 We're going to keep things simple and straightforward by using a tweaked `kpt` based distribution
 based on the [Cassandra Kubernetes](https://github.com/kubernetes/examples/tree/master/cassandra) example.
 
-### 2.1 Reserve a public IP address for the cassandra client
-
-```bash
-$ export CASSANDRA_CLIENT_IP_ADDR_NAME=datomic-cass
-$ gcloud compute addresses create $CASSANDRA_CLIENT_IP_ADDR_NAME \
-   --project $PROJECT_ID \
-   --region $REGION \
-   --description "External IP Address to use for cassandra"
-$ export CASSANDRA_CLIENT_IP_ADDR=$(gcloud compute addresses describe $CASSANDRA_CLIENT_IP_ADDR_NAME \
-   --project $PROJECT_ID \
-   --region $REGION \
-   --format json | jq -r .address)
-```
-
-### 2.2 First create the `cassandra` namespace
+### 2.1 First create the `cassandra` namespace
 
 ```bash
 $ kubectl create ns cassandra
@@ -192,21 +178,19 @@ Context <gke_cluster_name> modified.
 $ kubectl config use-context $GKE_CLUSTER_NAME
 ```
 
-### 2.3 Fetch and configure the cassandra distribution
+### 2.2 Fetch and configure the cassandra distribution
 
 Then fetch the cassandra distribution, don't forget to set the authorized networks 
 and cassandra client IP determined before.
 
 ```bash
 $ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/cassandra cassandra
-$ kpt cfg set cassandra authorized-networks $AUTHORIZED_NETWORKS
-$ kpt cfg set cassandra cassandra-ip $CASSANDRA_CLIENT_IP_ADDR
 ```
 
 Any other properties can be set before application. A list can be determined by executing
 `kpt cfg list-setters cassandra`.
 
-### 2.4 Install cassandra
+### 2.3 Install cassandra
 
 ```bash
 $ kpt live init cassandra

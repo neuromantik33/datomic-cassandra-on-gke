@@ -8,6 +8,10 @@ metadata:
 spec:
   clusterIP: None
   ports:
+  - name: cql
+    port: 9042
+    protocol: TCP
+    targetPort: cql
   - name: intra-node
     port: 7000
     protocol: TCP
@@ -24,29 +28,3 @@ spec:
     app: cassandra
   sessionAffinity: None
   type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: cassandra
-    role: client
-  name: cassandra-client
-  namespace: cassandra
-spec:
-  externalTrafficPolicy: Cluster
-  loadBalancerIP: "" # {"$kpt-set":"cassandra-ip"}
-  loadBalancerSourceRanges: # {"$kpt-set":"authorized-networks"}
-  - "0.0.0.0/0"
-  ports:
-  - name: cql
-    port: 9042
-    protocol: TCP
-    targetPort: cql
-  selector:
-    app: cassandra
-  sessionAffinity: ClientIP
-  sessionAffinityConfig:
-    clientIP:
-      timeoutSeconds: 10800
-  type: LoadBalancer

@@ -6,21 +6,6 @@ packageMetadata:
   shortDescription: Datomic on Cassandra on GKE
 openAPI:
   definitions:
-    io.k8s.cli.setters.cassandra-ip:
-      description: Cassandra client ip
-      x-k8s-cli:
-        setter:
-          name: cassandra-ip
-          required: true
-    io.k8s.cli.setters.authorized-networks:
-      description: Authorized networks
-      type: array
-      x-k8s-cli:
-        setter:
-          listValues:
-          - "0.0.0.0/0"
-          name: authorized-networks
-          required: true
     io.k8s.cli.setters.cluster-name:
       description: Cassandra cluster name
       x-k8s-cli:
