@@ -7,10 +7,6 @@ metadata:
   name: peer
   namespace: datomic
 spec:
-  externalTrafficPolicy: Cluster
-  loadBalancerIP: "" # {"$kpt-set":"peer-ip"}
-  loadBalancerSourceRanges: # {"$kpt-set":"authorized-networks"}
-  - "0.0.0.0/0"
   ports:
   - name: datomic
     port: 8998
@@ -23,4 +19,4 @@ spec:
   sessionAffinityConfig:
     clientIP:
       timeoutSeconds: 10800
-  type: LoadBalancer
+  type: ClusterIP

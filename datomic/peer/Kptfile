@@ -12,15 +12,6 @@ openAPI:
         setter:
           name: access-key
           required: true
-    io.k8s.cli.setters.authorized-networks:
-      description: Authorized networks
-      type: array
-      x-k8s-cli:
-        setter:
-          listValues:
-          - 0.0.0.0/0
-          name: authorized-networks
-          required: true
     io.k8s.cli.setters.db-name:
       description: Datomic peer db-name
       x-k8s-cli:
@@ -38,12 +29,6 @@ openAPI:
       x-k8s-cli:
         setter:
           name: peer-image
-          required: true
-    io.k8s.cli.setters.peer-ip:
-      description: Datomic peer client ip
-      x-k8s-cli:
-        setter:
-          name: peer-ip
           required: true
     io.k8s.cli.setters.pod-cpu:
       description: Peer CPU count

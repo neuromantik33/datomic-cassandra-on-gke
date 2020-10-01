@@ -233,9 +233,8 @@ pod/cassandra-0   1/1     Running   0          4m45s
 pod/cassandra-1   1/1     Running   0          3m54s
 pod/cassandra-2   1/1     Running   0          2m38s
 
-NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                      AGE
-service/cassandra          ClusterIP      None            <none>          7000/TCP,7001/TCP,7199/TCP   4m45s
-service/cassandra-client   LoadBalancer   10.x.x.x        <cassandra_ip>  9042:30892/TCP               4m45s
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                               AGE
+service/cassandra          ClusterIP      None            <none>          9042/TCP,7000/TCP,7001/TCP,7199/TCP   4m45s
 
 NAME                         READY   AGE
 statefulset.apps/cassandra   3/3     4m45s
@@ -305,21 +304,7 @@ xxxxxxxxxxx: Layer already exists
 1.0.6202: digest: sha256:xxxxxx size: 2220
 ```
 
-### 3.4 Reserve a public IP address for the datomic transactor
-
-```bash
-$ export TRANSACTOR_IP_ADDR_NAME=datomic-transactor
-$ gcloud compute addresses create $TRANSACTOR_IP_ADDR_NAME \
-   --project $PROJECT_ID \
-   --region $REGION \
-   --description "External IP Address to use for the datomic transactor"
-$ export TRANSACTOR_IP_ADDR=$(gcloud compute addresses describe $TRANSACTOR_IP_ADDR_NAME \
-   --project $PROJECT_ID \
-   --region $REGION \
-   --format json | jq -r .address)
-```
-
-### 3.5 Create the `datomic` namespace
+### 3.4 Create the `datomic` namespace
 
 ```bash
 $ kubectl create ns datomic
@@ -328,12 +313,10 @@ $ kubectl config set-context $GKE_CLUSTER_NAME --namespace datomic
 $ kubectl config use-context $GKE_CLUSTER_NAME
 ```
 
-### 3.6 Set the required properties
+### 3.5 Set the required properties
 
 ```bash
 $ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/datomic/transactor transactor
-$ kpt cfg set transactor/ authorized-networks $AUTHORIZED_NETWORKS
-$ kpt cfg set transactor/ transactor-ip $TRANSACTOR_IP_ADDR
 $ kpt cfg set transactor/ license-key <your_transactor_license>
 $ kpt cfg set transactor/ transactor-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
 ```
@@ -341,7 +324,7 @@ $ kpt cfg set transactor/ transactor-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0
 Any other properties can be set before application. A list can be determined by executing
 `kpt cfg list-setters transactor`.
 
-### 3.7 Install the transactor
+### 3.6 Install the transactor
 
 ```bash
 $ kpt live init transactor
@@ -371,21 +354,7 @@ However, it is necessary to create the database yourself beforehand in order for
 to run (probably using a REPL or your application). For our purposes we have created a
 database called `test`.
 
-### 4.1 Reserve a public IP address for the datomic peer
-
-```bash
-$ export PEER_IP_ADDR_NAME=datomic-peer
-$ gcloud compute addresses create $PEER_IP_ADDR_NAME \
-   --project $PROJECT_ID \
-   --region $REGION \
-   --description "External IP Address to use for the datomic peer"
-$ export PEER_IP_ADDR=$(gcloud compute addresses describe $PEER_IP_ADDR_NAME \
-   --project $PROJECT_ID \
-   --region $REGION \
-   --format json | jq -r .address)
-```
-
-### 4.2 Set the required properties
+### 4.1 Set the required properties
 
 ```bash
 $ export DB_NAME=test
@@ -393,15 +362,13 @@ $ kpt pkg get https://github.com/neuromantik33/datomic-cassandra-on-gke/datomic/
 $ kpt cfg set peer/ db-name $DB_NAME
 $ kpt cfg set peer/ access-key $DB_NAME
 $ kpt cfg set peer/ secret $DB_NAME
-$ kpt cfg set peer/ authorized-networks $AUTHORIZED_NETWORKS
-$ kpt cfg set peer/ peer-ip $PEER_IP_ADDR
 $ kpt cfg set peer/ peer-image eu.gcr.io/$PROJECT_ID/datomic-pro:1.0.6202
 ```
 
 Any other properties can be set before application. A list can be determined by executing
 `kpt cfg list-setters peer`.
 
-### 3.7 Install the peer
+### 4.2 Install the peer
 
 ```bash
 $ kpt live init peer

@@ -54,7 +54,7 @@ spec:
               apiVersion: v1
               fieldPath: status.podIP
         - name: ALT_HOST
-          value: "" # {"$kpt-set":"transactor-ip"}
+          value: $(POD_NAME).transactor.datomic.svc.cluster.local
         - name: LICENSE_KEY
           value: "" # {"$kpt-set":"license-key"}
         - name: MEMORY_INDEX_THRESHOLD
